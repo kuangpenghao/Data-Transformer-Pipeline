@@ -25,7 +25,7 @@ def parse_bash_args():
     parser.add_argument("--theta",type=int,default=100000)
     parser.add_argument("--device",type=str,default="cuda")
 
-    parser.add_argument("--num_epochs",type=int,default=10)
+    parser.add_argument("--num_epochs",type=float,default=10)
     parser.add_argument("--lr",type=float,default=1e-4)
     parser.add_argument("--lr_min",type=float,default=1e-5)
     parser.add_argument("--warmup_ratio",type=float,default=0.1)
@@ -96,7 +96,10 @@ def decode_function(transformer_lm, tokenizer, config, device):
         encoded_list=tokenizer.encode(f.read())
     
     decoded_list=tokenizer.decode(encoded_list)
-    print(f"Text to decode:\n{decoded_list}\n\ngenerated text:")
+    print("=================================================\n")
+    print(f"Text to decode:\n{decoded_list}")
+    print("\n=================================================\n")
+    print(f"Generated text:")
 
     input("press Enter to decode...")
 
@@ -190,6 +193,8 @@ def train_manage():
         dataset_length=66296750
     if corpus_path=="/home/kuangph/CS336-Assignment1/data/2G.txt":
         dataset_length=556539005
+    if corpus_path=="/home/kuangph/CS336-Assignment1/data/11G.txt":
+        dataset_length=2731070566
 
     save_path="/home/kuangph/CS336-Assignment1/outputs/"+corpus_size+"_checkpoints.pt"
     log_interval=args.log_interval
@@ -222,7 +227,7 @@ def train_manage():
     checkpoint_manager=Checkpoint_Manager()
 
     token_per_tensor=batch_size*seq_length
-    total_iterations=dataset_length//token_per_tensor*num_epochs
+    total_iterations=dataset_length//token_per_tensor*int(num_epochs)
     warmup_iterations=int(total_iterations*warmup_ratio)
     warmfix_iterations=int(total_iterations*warmfix_ratio)
 
@@ -247,7 +252,7 @@ def train_manage():
         for param_group in optimizer.param_groups:
             param_group["lr"]=lr
 
-        if ite>=int(total_iterations*0.1) and (ite+1)%100==0:
+        if ite>=int(total_iterations*0.025) and (ite+1)%250==0:
             should_output=True
         else:
             should_output=False

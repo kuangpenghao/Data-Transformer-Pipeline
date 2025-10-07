@@ -58,6 +58,7 @@ class BPE_Tokenizer:
         min_number=998244353
         min_pair=None
         for pair,number in dict_idx.items():
+            #print(f"pair:{pair},number:{number}")
             if number<min_number:
                 min_number=number
                 min_pair=pair
@@ -89,6 +90,8 @@ class BPE_Tokenizer:
             text_split=pattern.finditer(text)
             for token in text_split:
                 token_str=token.group()
+                #input("press enter to continue")
+                #print(f"original_token:{token_str}")
                 if token_str in self.special_tokens:
                     token_bytes=token_str.encode("utf-8")
                     encoded_text_list.append(self.vocab_reverse[token_bytes])
@@ -99,6 +102,7 @@ class BPE_Tokenizer:
                 can_merge=True
                 while can_merge:
                     token_list,can_merge=self._encode_merge(token_list)
+                    #print(f"finish a merge,token_list:{token_list}")
 
                 encoded_list=[self.vocab_reverse[token] for token in token_list if token in self.vocab_reverse]
                 encoded_list=[self.vocab[token] for token in encoded_list]
@@ -133,11 +137,10 @@ if __name__=="__main__":
     vocab_rev=tokenizer.vocab_reverse
     merges=tokenizer.merge_dict
     #print(vocab_rev)
-
-    print(f"begin 276M.txt")
-
-    with open("data/corpus.en") as f:
-        encoded_ids=tokenizer.encode_iterable(f)
+    with open("data/simple.txt") as f:
+        text=f.read()
+        print(f"text:{text}")
+        encoded_ids=tokenizer.encode(text)
         for id in encoded_ids:
             print(f"id:{id}")
             #pass

@@ -107,7 +107,8 @@ if __name__ == "__main__":
         "5M",
         "21M",
         "276M",
-        "2G"
+        "2G",
+        "11G"
     ]
 
     for i,session in enumerate(sessions):

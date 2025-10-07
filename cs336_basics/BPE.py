@@ -126,7 +126,7 @@ def BPE_init(
         vocab_tot+=1
 
     with open(input_path,"rb") as f:
-        num_processes = 16
+        num_processes = 1
         boundaries = find_chunk_boundaries(f, num_processes, b"<|endoftext|>")
         
         tasks=[]
@@ -333,6 +333,12 @@ def export2file(vocabulary,bytes_merge_list):
 
     with open(merges_path, "w", encoding="utf-8") as f:
         f.write(str(bytes_merge_list) + "\n")
+
+if __name__=="__main__":
+    input_path="data/simple.txt"
+    vocab_size=260
+    special_tokens=["<|endoftext|>"]
+    BPE(input_path,vocab_size,special_tokens)
 
 '''
 

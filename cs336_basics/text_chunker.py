@@ -33,6 +33,8 @@ class Memmap_Manager:
             encoder=tokenizer.encode_iterable(f)
             for id in encoder:
                 length+=1
+                if length%10000000==0:
+                    print(f"processed {length} tokens")
                 buffer.append(id)
                 if len(buffer)>=self.chunk_size:
                     self.save_by_chunks(buffer,self.chunk_size,chunk_num)
@@ -71,9 +73,10 @@ if __name__=="__main__":
     vocab_path="/home/kuangph/CS336-Assignment1/data/vocab_32000.txt"
     merge_path="/home/kuangph/CS336-Assignment1/data/merges_32000.txt"
     special_tokens=["<|endoftext|>"]
-    corpus_path="/home/kuangph/CS336-Assignment1/data/2K.txt"
-    memmap_manager=Memmap_Manager(chunk_size,vocab_path,merge_path,special_tokens,corpus_path,"2K")
+    corpus_path="/home/kuangph/CS336-Assignment1/data/11G.txt"
+    memmap_manager=Memmap_Manager(chunk_size,vocab_path,merge_path,special_tokens,corpus_path,"11G")
 
+    print(f"chunk begin")
     memmap_manager.save_as_memmap()
 
     token_ids=memmap_manager.load_by_range(0,150)

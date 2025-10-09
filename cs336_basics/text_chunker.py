@@ -16,7 +16,7 @@ class Memmap_Manager:
         self.corpus_path=corpus_path
         self.corpus_size=corpus_size
         
-    def save_by_chunks(self,token_ids,buffer_len,chunk_num=0):
+    def save_by_chunks(self,token_ids,buffer_len,chunk_num):
         fname="/home/kuangph/CS336-Assignment1/data/"+self.corpus_size+f"_chunks/encoded_tokens_chunk_{chunk_num}.dat"
         dtype=np.int32
         shape=(buffer_len,)
@@ -33,8 +33,6 @@ class Memmap_Manager:
             encoder=tokenizer.encode_iterable(f)
             for id in encoder:
                 length+=1
-                if length%10000000==0:
-                    print(f"processed {length} tokens")
                 buffer.append(id)
                 if len(buffer)>=self.chunk_size:
                     self.save_by_chunks(buffer,self.chunk_size,chunk_num)

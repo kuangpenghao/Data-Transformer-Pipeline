@@ -9,19 +9,24 @@ class Cross_Entropy_Calculator:
         self.log_softmax=Log_Softmax(dim=-1)
 
     def forward(self,inputs:torch.Tensor,targets:torch.Tensor)->torch.Tensor:
-        inputs=inputs.reshape(-1,inputs.shape[-1])
-        inputs=-self.log_softmax.forward(inputs)
-        targets=targets.reshape(-1)
-
-        selected=inputs[torch.arange(inputs.shape[0]),targets]
+        inputs=inputs.reshape(-1,inputs.shape[-1])#[bsz*seq_len,vocab_size]
+        inputs=-self.log_softmax.forward(inputs)#[bsz*seq_len,vocab_size]
+        targets=targets.reshape(-1)#[bsz*seq_len]
+ 
+        selected=inputs[torch.arange(inputs.shape[0]),targets]#[bsz*seq_len]
         loss=torch.mean(selected,dim=0)
         return loss
 
 class AdamW_Optimizer(torch.optim.Optimizer):
     def __init__(self,parameters,lr:float,weight_decay:float,betas,eps:float):
-        super(AdamW_Optimizer,self).__init__(parameters,{})
+        param_groups=[
+            {
+                "params":parameters,
+                "lr":lr
+            }
+        ]
+        super(AdamW_Optimizer,self).__init__(param_groups,{})
         self.weight_decay=weight_decay
-        self.lr=lr
         self.beta1=betas[0]
         self.beta2=betas[1]
         self.eps=eps
@@ -48,14 +53,14 @@ class AdamW_Optimizer(torch.optim.Optimizer):
                     step=torch.tensor(float(step),device=p.device)
                     state["step"]=step
 
-                current_lr=group.get("lr",self.lr)
+                current_lr=group.get("lr")
 
                 m=m*self.beta1+(1-self.beta1)*grad
                 v=v*self.beta2+(1-self.beta2)*(grad**2)
-                step.add_(1)
+                step=step+1
 
                 alpha_t=current_lr*(math.sqrt(1-self.beta2**step)/(1-self.beta1**step))
-                p.data=p.data-alpha_t*(m/(torch.sqrt(v)+self.eps))-self.lr*self.weight_decay*p.data
+                p.data=p.data-alpha_t*(m/(torch.sqrt(v)+self.eps))-current_lr*self.weight_decay*p.data
 
                 self.state[p]["m"]=m
                 self.state[p]["v"]=v
@@ -64,7 +69,6 @@ class AdamW_Optimizer(torch.optim.Optimizer):
 class Learning_Rate_Scheduler:
     def __init__(self):
         pass
-
     def get_lr(self,step,lr_max,lr_min,Tw,Tc)->float:
         if step<Tw:
             lr=lr_max*step/Tw
@@ -77,7 +81,6 @@ class Learning_Rate_Scheduler:
 class Gradient_Clipper:
     def __init__(self,max_norm:float):
         self.max_norm=max_norm
-
     def clip(self,parameters):
         total_norm=torch.sqrt(sum(p.grad.data.norm(2)**2 for p in parameters if p.grad is not None))
         for p in parameters:

@@ -183,6 +183,15 @@ def train_manage():
     corpus_size=args.corpus_size
     corpus_path="/home/kuangph/CS336-Assignment1/data/"+corpus_size+".txt"
 
+    save_path="/home/kuangph/CS336-Assignment1/outputs/"+corpus_size+"_checkpoints.pt"
+    log_interval=args.log_interval
+    save_interval=args.save_interval
+    
+    weight_decay=args.weight_decay
+    betas=tuple(args.betas)
+    eps=args.eps
+    max_norm=args.max_norm
+
     if corpus_path=="/home/kuangph/CS336-Assignment1/data/2K.txt":
         dataset_length=306
     if corpus_path=="/home/kuangph/CS336-Assignment1/data/5M.txt":
@@ -195,15 +204,6 @@ def train_manage():
         dataset_length=556539005
     if corpus_path=="/home/kuangph/CS336-Assignment1/data/11G.txt":
         dataset_length=2731070566
-
-    save_path="/home/kuangph/CS336-Assignment1/outputs/"+corpus_size+"_checkpoints.pt"
-    log_interval=args.log_interval
-    save_interval=args.save_interval
-    
-    weight_decay=args.weight_decay
-    betas=tuple(args.betas)
-    eps=args.eps
-    max_norm=args.max_norm
 
     token_positions=torch.arange(seq_length,device=device)
 
@@ -226,6 +226,7 @@ def train_manage():
     batch_getter=Batch_By_Memmap(memmap_manager)
     checkpoint_manager=Checkpoint_Manager()
 
+    # 总迭代步数需要通过epochs数量来计算！
     token_per_tensor=batch_size*seq_length
     total_iterations=dataset_length//token_per_tensor*int(num_epochs)
     warmup_iterations=int(total_iterations*warmup_ratio)
@@ -252,7 +253,7 @@ def train_manage():
         for param_group in optimizer.param_groups:
             param_group["lr"]=lr
 
-        if ite>=int(total_iterations*0.025) and (ite+1)%250==0:
+        if ite>=int(total_iterations*0.025) and (ite+1)%100==0:
             should_output=True
         else:
             should_output=False
@@ -262,7 +263,7 @@ def train_manage():
                       loss_fn,optimizer,grad_clipper,
                       should_output)
         
-        if (ite+1)%25==0:
+        if (ite+1)%log_interval==0:
             current_time=time.time()
             time_spent=current_time-last_time
             ites_spent=ite-last_ite

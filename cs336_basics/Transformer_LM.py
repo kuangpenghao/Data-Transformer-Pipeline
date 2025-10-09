@@ -13,7 +13,6 @@ class Transformer_Block(nn.Module):
                  theta:int=None,
                  dtype=None,
                  device=None):
-                 #token_positions:torch.Tensor=None):
         super(Transformer_Block,self).__init__()
         self.RMSNorm_Attn=RMSNorm(d_model,dtype=dtype,device=device)
         self.RMSNorm_FF=RMSNorm(d_model,dtype=dtype,device=device)
@@ -44,7 +43,6 @@ class Transformer_LM(nn.Module):
                  theta:int=None,
                  dtype=None,
                  device=None):
-                 #token_positions:torch.Tensor=None):
         super(Transformer_LM,self).__init__()
         self.d_model=d_model
         self.num_heads=num_heads
@@ -55,7 +53,6 @@ class Transformer_LM(nn.Module):
         self.theta=theta
         self.dtype=dtype
         self.device=device
-        #self.token_positions=token_positions
         self.embeddings=Generate_Embeddings(vocab_size,d_model,device=device,dtype=dtype)
         self.transformer_blocks=nn.ModuleList([
             Transformer_Block(d_model=d_model,
@@ -65,7 +62,6 @@ class Transformer_LM(nn.Module):
                               theta=theta,
                               dtype=dtype,
                               device=device)
-                              #token_positions=token_positions)
             for _ in range(num_layers)
         ])
         self.final_norm=RMSNorm(d_model,device=device,dtype=dtype)
@@ -84,12 +80,11 @@ if __name__=="__main__":
                       num_heads=8,
                       d_ff=2048,
                       vocab_size=10000,
-                      num_layers=1,
+                      num_layers=2,
                       max_seq_length=128,
                       theta=100000,
                       dtype=torch.float32,
-                      device="cpu",
-                      token_positions=torch.arange(128))
+                      device="cpu")
     states=lm.state_dict()
     for state_key in states:
         print(state_key,states[state_key].shape)

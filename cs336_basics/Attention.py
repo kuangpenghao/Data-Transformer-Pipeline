@@ -38,7 +38,6 @@ class Multihead_Attention(nn.Module):
                  num_heads:int,
                  max_seq_length:int=None,
                  theta:int=None,
-                 #token_positions:torch.Tensor=None,
                  device=None):
         super(Multihead_Attention,self).__init__()
         

@@ -48,25 +48,32 @@ class BPE_Tokenizer:
 
     def _encode_merge(self,token_list:list[bytes]):
         dict_idx=defaultdict(int)
+
+        # 列出该token的所有pair，并检查是否有pair在merge_dict中
+        # merge_dict即为从pair到合并序号的映射
         for i in range(len(token_list)-1):
             pair=(token_list[i],token_list[i+1])
             if pair in self.merge_dict:
                 dict_idx[pair]=self.merge_dict[pair]
+        # 不可继续合并
         if len(dict_idx)==0:
             return token_list,False
         
         min_number=998244353
         min_pair=None
+        # 找出合并序号最小的pair
         for pair,number in dict_idx.items():
-            #print(f"pair:{pair},number:{number}")
+            print(f">>>>>pair:{pair},number:{number}")
             if number<min_number:
                 min_number=number
                 min_pair=pair
 
+        # 进行合并
         new_token=min_pair[0]+min_pair[1]
         for i in range(len(token_list)-1):
             pair=(token_list[i],token_list[i+1])
             if pair==min_pair:
+                # token_list改为：合并后的token,前后拼接上原token_list
                 token_list=token_list[:i]+[new_token]+token_list[i+2:]
                 break
         return token_list,True
@@ -75,6 +82,7 @@ class BPE_Tokenizer:
         return bytes([char])
     
     def _process_encode(self,ori_text:str):
+        # 对待编码文本进行Pre-tokenization
         texts=self._chunk_text(ori_text)
 
         GPT2_SPLIT_PATTERN = r"""'(?:[sdmt]|ll|ve|re)| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+"""
@@ -87,27 +95,33 @@ class BPE_Tokenizer:
         encoded_text_list=[]
 
         for text in texts:
+            # text即为单个文本
             text_split=pattern.finditer(text)
             for token in text_split:
                 token_str=token.group()
-                #input("press enter to continue")
-                #print(f"original_token:{token_str}")
+                # token_str即为单个token
+
+                # 如果是special token，直接编码
                 if token_str in self.special_tokens:
                     token_bytes=token_str.encode("utf-8")
                     encoded_text_list.append(self.vocab_reverse[token_bytes])
                     continue
-
+                # 否则转成utf-8字节，进行合并操作
                 token_list=[self._process_char(b) for b in token_str.encode("utf-8")]
 
                 can_merge=True
                 while can_merge:
                     token_list,can_merge=self._encode_merge(token_list)
                     #print(f"finish a merge,token_list:{token_list}")
+                    #input("press enter to continue")
 
                 encoded_list=[self.vocab_reverse[token] for token in token_list if token in self.vocab_reverse]
                 encoded_list=[self.vocab[token] for token in encoded_list]
 
                 encoded_text_list.extend([self.vocab_reverse[token] for token in encoded_list])
+                #print(f"\nnew encoded text:{encoded_list}")
+                #print(f"encoded_list:{encoded_text_list}")
+                #print()
 
         return encoded_text_list  
     
@@ -136,14 +150,20 @@ if __name__=="__main__":
     tokenizer=BPE_Tokenizer.from_files("data/vocab_32000.txt","data/merges_32000.txt",special_tokens=["<|endoftext|>"])
     vocab_rev=tokenizer.vocab_reverse
     merges=tokenizer.merge_dict
-    #print(vocab_rev)
+
     with open("data/simple.txt") as f:
         text=f.read()
-        print(f"text:{text}")
+        print(f"text:")
+        print(text)
         encoded_ids=tokenizer.encode(text)
         for id in encoded_ids:
-            print(f"id:{id}")
-            #pass
+            print(f"id:{id},vocab:{tokenizer.vocab[id]}")
+        
+        print(f"\nencoded ids:{encoded_ids}\n")
+        decoded_text=tokenizer.decode(encoded_ids)
+        print(f"decoded text:")
+        print(decoded_text)
+        ''''''
 
     #peak=tracemalloc.get_traced_memory()[1]
     #print(f"peak memory usage:{peak/1024/1024} MB")
